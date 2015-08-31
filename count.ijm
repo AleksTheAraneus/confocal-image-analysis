@@ -21,25 +21,16 @@ function processFile(input, output, file) {
 	
 	run("Multiply...", "value=99.000");
 	run("Make Binary");
-	run("Dilate");
+	//run("Dilate");
 	run("Dilate");
 	run("Close-");
 	run("Fill Holes");
+	//run("Dilate");
 
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
-	run("Despeckle");
+	//run("Despeckle");
+	//run("Despeckle");
+	//run("Despeckle");
+	//run("Despeckle");
 	
 	run("Remove Outliers...", "radius=20 threshold=50 which=Dark");
 	run("Watershed");
@@ -50,3 +41,5 @@ function processFile(input, output, file) {
 
 saveAs("Results", input+"count.tsv");
 print("Saved to: " + output);
+
+run("Quit");

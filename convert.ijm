@@ -34,4 +34,6 @@ function processFile(input, output, file) {
 		close();
 	}
 }
+
 print("Saved to: " + output);
+run("Quit");
