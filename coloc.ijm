@@ -13,26 +13,17 @@ function processFile(args) {
 	open(file1);
 	open(file2);
 
-	// only colocalised
-	run("Colocalization Threshold", "channel_1=file1 channel_2=file2 use=None channel=[Red : Green] show");
+	run("Colocalization Threshold", "channel_1=file1 channel_2=file2 use=None channel=[Red : Green] show include");
 	selectWindow("Results");
 	close();
 	selectWindow("Colocalized Pixel Map RGB Image");
 	run("RGB Measure Plus", "red_threshold_min=1 red_threshold_max=255 green_threshold_min=1 green_threshold_max=255 blue_threshold_min=1 blue_threshold_max=255");
 	
-
-	//run("Split Channels");
-	//selectWindow("Colocalized Pixel Map RGB Image (blue)");
-	//run("Make Binary");	
-
-	// measure
-	new_path=replace(file1, "convert", "colocalisation")
+	new_path=replace(file1, "convert", "colocalisation");
 	run("Save", "save=new_path");
 	saveAs("Results", new_path+"_coloc.tsv");
 	
-	//while (nImages>0) { 
-	//	selectImage(nImages); 
-	//close(); 
-	//} 
+
 }
 run("Quit");
+
