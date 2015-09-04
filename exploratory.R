@@ -103,7 +103,7 @@ meta <-data.frame(c(names(data[,-1])), c("name of the .lsm file from the 'input'
                              "intensity standard deviation of the yellow region", "number of cells on image", "mean intensity of green divided by the number of cells",
                              "mean intensity of colocalisation region divided by the number of cells"))
 names(meta) <- c("variable", "description")
-write.csv(meta, paste0(pth, "/output/meatadata.csv"))
+write.table(meta, paste0(pth, "/output/meatadata.csv"), sep="|")
 
 ### SMIETNICZEK
 
