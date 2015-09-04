@@ -18,7 +18,7 @@ title <- function(x) {
   res
 }
 
-### SUMMARY
+### SUMMARY 
 #agg1 <- aggregate(data, by=list(data$cell_line, data$treatment, data$date), FUN=mean)
 #agg2 <- aggregate(data, by=list(data$cell_line, data$treatment), FUN=mean)
 
@@ -30,12 +30,13 @@ data3 <- data[data$date=="81515",]
 
 #plot each cell line facets, each treatment x and yellow mena per cell y 
 p1.1 <- ggplot(data_in, aes(treatment, yellow_mean_per_cell)) + 
-  geom_bar(stat="identity") +
+  stat_summary(fun.y="mean", geom="bar") +
+  #geom_bar(fun.y=mean, stat="identity") +
   facet_wrap(~cell_line) +
   labs(title=title(unique(data_in$date)))
 
 p1.2 <- ggplot(data_in, aes(treatment, green_mean_per_cell)) + 
-  geom_bar(stat="identity") +
+  stat_summary(fun.y="mean", geom="bar") +
   facet_wrap(~cell_line) +
   labs(title=title(unique(data_in$date)))
 
@@ -43,13 +44,13 @@ p1.2 <- ggplot(data_in, aes(treatment, green_mean_per_cell)) +
 
 #plot each treatment facets and each cell line x and yellow_mean_per_cell y
 p2.1 <- ggplot(data_in, aes(cell_line, yellow_mean_per_cell)) +
-  geom_bar(stat="identity") +
+  stat_summary(fun.y="mean", geom="bar") +
   facet_wrap(~treatment) + 
   labs(title=title(unique(data_in$date))) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 p2.2 <- ggplot(data_in, aes(cell_line, green_mean_per_cell)) +
-  geom_bar(stat="identity") +
+  stat_summary(fun.y="mean", geom="bar") +
   facet_wrap(~treatment) +
   labs(title=title(unique(data_in$date))) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -91,6 +92,18 @@ dev.off()
 #   i=i+1
 # }
 
+
+### metadata
+
+meta <-data.frame(c(names(data[,-1])), c("name of the .lsm file from the 'input' folder","date when data was recorded, i.e. when the picure was taken","cell line",
+                             "whether Control, Zinc treated or Zna/Zinc treated","name of original image",
+                             "fraction of image area that shows any green (Fluozin showing free intracellular zinc)",
+                             "fraction of image area that shows any yellow (region where green colocalises with red stain, which is a lysotracker)",
+                             "mean intensity of green on image", "mean intensity of the colocalisation region", "intensity standard deviation of the green region",
+                             "intensity standard deviation of the yellow region", "number of cells on image", "mean intensity of green divided by the number of cells",
+                             "mean intensity of colocalisation region divided by the number of cells"))
+names(meta) <- c("variable", "description")
+write.csv(meta, paste0(pth, "/output/meatadata.csv"))
 
 ### SMIETNICZEK
 
