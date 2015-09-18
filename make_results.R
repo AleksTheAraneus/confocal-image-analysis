@@ -132,14 +132,59 @@ if (!is.na(file_list_in_nuclei[1])) {
 
 res$file <- gsub("_", "/", res$file)
 
+### AREA
+#yellow
+area_p <- 1024^2
+area_um <- 18211.8110
+
+res$yellow_area_pixels <- res$yellow_area_fraction*area_p
+res$yellow_area_um <- res$yellow_area_fraction*area_um
+
+res$yellow_area_pixels_per_cell <- res$yellow_area_fraction*area_p/res$cell_count
+res$yellow_area_um_per_cell <- res$yellow_area_fraction*area_um/res$cell_count
+
+#red
+res$red_area_pixels <- res$red_area_fraction*area_p
+res$red_area_um <- res$red_area_fraction*area_um
+
+res$red_area_pixels_per_cell <- res$red_area_fraction*area_p/res$cell_count
+res$red_area_um_per_cell <- res$red_area_fraction*area_um/res$cell_count
+
+#green
+res$green_area_pixels <- res$green_area_fraction*area_p
+res$green_area_um <- res$green_area_fraction*area_um
+
+res$green_area_pixels_per_cell <- res$green_area_fraction*area_p/res$cell_count
+res$green_area_um_per_cell <- res$green_area_fraction*area_um/res$cell_count
+
+### INNE
+res$green_in_nuclei_mean_per_cell <- res$green_in_nuclei_mean/res$cell_count
+
+
 ### SUMMARY
+#LYSO
 agg1 <- aggregate(res, by=list(res$cell_line, res$treatment, res$date), FUN=mean, na.rm=T)
+agg1 <- agg1[,-c(4,5,6,7,8)]
+names(agg1)[1:3] <- c("cell_line", "treatment", "date") 
 agg2 <- aggregate(res, by=list(res$cell_line, res$treatment), FUN=mean, na.rm=T)
+agg2<- agg2[,-c(3,4,5,6,7)]
+names(agg2)[1:2] <- c("cell_line", "treatment")
+#MITO
+agg3 <- aggregate(res, by=list(res$cell_line, res$date), FUN=mean, na.rm=T)
+agg3 <- agg3[,-c(3,4,5,6)]
+names(agg3)[1:2] <- c("cell_line", "date")
 
 ### SAVE AWAY
 system("mkdir output")
-write.csv(res, "output/measurements.csv", row.names=F)
-write.csv(agg1, "output/summary1.csv", row.names=F)
-write.csv(agg2, "output/summary2.csv", row.names=F)
+
+#FOR LYSO:
+write.csv(res, "output/measurements_lyso.csv", row.names=F)
+write.csv(agg1, "output/summary1_lyso.csv", row.names=F)
+write.csv(agg2, "output/summary2_lyso.csv", row.names=F)
+
+# FOR MITO:
+write.csv(res, "output/measurements_mito.csv", row.names=F)
+write.csv(agg3, "output/summary_mito.csv", row.names=F)
+
 
 print(paste0("Saved to: ", pth, "/output"))
