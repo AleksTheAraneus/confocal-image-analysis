@@ -4,8 +4,8 @@ args = getArgument();
 processFile(args);
 
 function processFile(args) {
-	file1 = args;
-	file2 = replace(args, "C3-", "C2-");
+	file1 = args; //the nuclei
+	file2 = replace(args, "C2-", "C1-");
 
 	open(file1);
 	// make nuclei mask
@@ -16,9 +16,8 @@ function processFile(args) {
 	run("Fill Holes");
 	run("Remove Outliers...", "radius=20 threshold=50 which=Dark");
 	
-	
 	open(file2);
-  run("Colocalization Threshold", "channel_1=file1 channel_2=file2 use=None channel=[Red : Green] show include");
+    run("Colocalization Threshold", "channel_1=file1 channel_2=file2 use=None channel=[Red : Green] show include");
 
 	selectWindow("Results");
 	close();

@@ -6,7 +6,7 @@ processFile(args);
 
 function processFile(args) {
 	file1 = args;
-	file2 = replace(args, "C1-", "C2-");
+	file2 = replace(args, "C2-", "C1-");
 	print(file1);
 	print(file2);
 

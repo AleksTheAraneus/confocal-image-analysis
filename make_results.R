@@ -1,4 +1,5 @@
-# ctrl+f: ROUND ONE
+# ctrl+f: MITO / LYSO
+#TODO add if elif MITO / LYSO / CATD/ CATB
 
 pth <- commandArgs(trailingOnly = TRUE)
 #pth <- "/mnt/DATAPART1/Sasi"
@@ -14,7 +15,7 @@ file_list_in_nuclei <- list.files(paste0(pth, "/in_nuclei"), pattern=".tsv")
 # measure RGB channels on converted .lsm images
 measure_lsm_data <- matrix(NA)
 for( file in file_list_measure_lsm) {
-  Label <- c(gsub(".lsm_measure_lsm.tsv", "", as.character(file)))
+  Label <- c(gsub(".tif_measure_tif.tsv", "", as.character(file)))
   new <- cbind(read.csv(paste0(pth, "/input/", file), header=T, sep="\t"), Label)
   measure_lsm_data <- merge(measure_lsm_data, new, all=T)
 }
@@ -34,7 +35,7 @@ measure_lsm <- measure_lsm[,-2]
 # colocalisation data; only measure yellow, which is blue. Put 0's where no measurement available
 coloc_data <- matrix(NA)
 for(file in file_list_coloc) {
-  Label <- c(gsub("C1-", "", gsub(".tif_coloc.tsv", "", as.character(file))))
+  Label <- c(gsub("C2-", "", gsub(".tif_coloc.tsv", "", as.character(file))))
   new <- cbind(read.csv(paste0(pth, "/colocalisation/", file), header=T, sep="\t"), Label)
   coloc_data <- merge(coloc_data, new, all=T)
 }
@@ -61,10 +62,10 @@ for ( file in file_list_count) {
 
 count <- count_data[count_data$Area > 99,]
 count <- as.data.frame(xtabs(~Label, count))
-count$Label <- unlist(lapply(as.character(count$Label), function(x) { gsub(".tif", "", gsub("C3-", "", x))} ))
+count$Label <- as.factor(unlist(lapply(as.character(count$Label), function(x) { gsub(".tif", "", gsub("C2-", "", x))} )))
 
 
-# green in nuclei
+# green in nuclei (possibly red?)
 if (!is.na(file_list_in_nuclei[1])) {
   print("Green in nuclei data detected, adding...")
   in_nuclei_data <- matrix(NA)
@@ -94,23 +95,33 @@ res <- merge(res, coloc, by="Label", all=T)
 
 names(res) <- c("file", "red_area_fraction", "green_area_fraction", "blue_area_fraction", "red_mean", "green_mean", "blue_mean", "red_stdev","green_stdev",
                 "blue_stdev", "cell_count", "yellow_area_fraction", "yellow_mean", "yellow_stdev")
+# without colocalisation
+names(res) <- c("file", "red_area_fraction", "green_area_fraction", "blue_area_fraction", "red_mean", "green_mean", "blue_mean", "red_stdev","green_stdev",
+                "blue_stdev", "cell_count")
+# less channels (one)
+names(res) <- c("file", "red_area_fraction", "green_area_fraction", "blue_area_fraction", "red_mean", "green_mean", "blue_mean", "red_stdev","green_stdev",
+                "blue_stdev")
 
 
 res$red_mean_per_cell <- round(res$red_mean / res$cell_count, 5)
 res$green_mean_per_cell <- round(res$green_mean / res$cell_count, 5)
 res$yellow_mean_per_cell <- round(res$yellow_mean / res$cell_count, 5)
 
-
-
-### LABELS: LYSO
+### META
 meta <- cbind(t(as.data.frame(strsplit(as.character(res$file), "_"))), as.data.frame(res$file))
 meta <- meta[, -(1:5)] 
+
+## LABELS: LYSO
+#names(meta) <- c("date", "cell_line", "treatment", "image", "file")
+
+### LABELS: MITO
+names(meta) <- c("date", "cell_line", "image", "file")
+
+### LABELS: CATD
+#meta <- meta[,-1]
 names(meta) <- c("date", "cell_line", "treatment", "image", "file")
 
-# ### LABELS: mitochondria:
-# meta <- cbind(t(as.data.frame(strsplit(as.character(res$file), "_"))), as.data.frame(res$file))
-# meta <- meta[, -(1:5)] 
-# names(meta) <- c("date", "cell_line", "image", "file")
+names(meta) <- c("date", "treatment", "image", "file")
 
 res <- merge(meta,res)
 
@@ -119,10 +130,10 @@ res$cell_line <- droplevels(res$cell_line)
 
 ### rearrange
 #LYSO
-res <- res[,c(1:5,15,6:14,16:21)]
+#res <- res[,c(1:5,15,6:14,16:21)]
 
 #MITO
-#res <- res[,c(1,2,3,4,14,5:13,15:20)]
+#res <- res[,c(1:4,14,5:13,15:20)]
 
 
 ### add green in nuclei,if exists
@@ -132,10 +143,12 @@ if (!is.na(file_list_in_nuclei[1])) {
 
 res$file <- gsub("_", "/", res$file)
 
-### AREA
+### AREA: check!
 #yellow
 area_p <- 1024^2
-area_um <- 18211.8110
+area_um <- 134.95^2
+area_um <- 85.02^2
+area_um <- 94.4^2
 
 res$yellow_area_pixels <- res$yellow_area_fraction*area_p
 res$yellow_area_um <- res$yellow_area_fraction*area_um
@@ -162,29 +175,44 @@ res$green_in_nuclei_mean_per_cell <- res$green_in_nuclei_mean/res$cell_count
 
 
 ### SUMMARY
-#LYSO
+#LYSO & CATD
 agg1 <- aggregate(res, by=list(res$cell_line, res$treatment, res$date), FUN=mean, na.rm=T)
 agg1 <- agg1[,-c(4,5,6,7,8)]
 names(agg1)[1:3] <- c("cell_line", "treatment", "date") 
 agg2 <- aggregate(res, by=list(res$cell_line, res$treatment), FUN=mean, na.rm=T)
 agg2<- agg2[,-c(3,4,5,6,7)]
 names(agg2)[1:2] <- c("cell_line", "treatment")
-#MITO
+
+##MITO
 agg3 <- aggregate(res, by=list(res$cell_line, res$date), FUN=mean, na.rm=T)
 agg3 <- agg3[,-c(3,4,5,6)]
 names(agg3)[1:2] <- c("cell_line", "date")
+
+agg1 <- aggregate(res, by=list(res$treatment, res$date), FUN=mean, na.rm=T)
+agg1 <- agg1[,-c(3,4,5,6)]
+names(agg1)[1:2] <- c("treatment", "date") 
 
 ### SAVE AWAY
 system("mkdir output")
 
 #FOR LYSO:
-write.csv(res, "output/measurements_lyso.csv", row.names=F)
-write.csv(agg1, "output/summary1_lyso.csv", row.names=F)
-write.csv(agg2, "output/summary2_lyso.csv", row.names=F)
+#write.csv(res, "output/measurements_lyso.csv", row.names=F)
+#write.csv(agg1, "output/summary1_lyso.csv", row.names=F)
+#write.csv(agg2, "output/summary2_lyso.csv", row.names=F)
+#
+## FOR MITO:
+#write.csv(res, "output/measurements_mito.csv", row.names=F)
+#write.csv(agg3, "output/summary_mito.csv", row.names=F)
+#
+#FOR CATD:
+write.csv(res, "output/measurements_catD.csv", row.names=F)
+write.csv(agg1, "output/summary1_catD.csv", row.names=F)
+write.csv(agg2, "output/summary_catD.csv", row.names=F)
 
-# FOR MITO:
-write.csv(res, "output/measurements_mito.csv", row.names=F)
-write.csv(agg3, "output/summary_mito.csv", row.names=F)
-
+#FOR CATB:
+write.csv(res, "output/measurements_catB.csv", row.names=F)
+write.csv(agg1, "output/summary1_catB.csv", row.names=F)
+write.csv(agg2, "output/summary2_catB.csv", row.names=F)
+write.csv(agg3, "output/summary3_catB.csv", row.names=F)
 
 print(paste0("Saved to: ", pth, "/output"))
