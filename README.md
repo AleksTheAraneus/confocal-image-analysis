@@ -1,7 +1,14 @@
 ## TODO
 - rename "wrap.sh" - more informative name (confoc_metrics or ...)
 - use command line arguments for each of the pepeline modules and make them comprehensible (AND add description)
+    specify the folder with the pictures of the hierarchy: ..
+    script mkdir's an confoc_output_specified_folder folder
+    puts the things from the specified folder in the raw folder  inside the above mentiopned one
+    and the rest of analysis folders, too
 - how to make it a whole? (Fiji problematic)
+- make the scripts check for each channel and only analyse those that are existent, printing into a log file which channel is which?
+    OR dummy channels (better: results in consistent naming of columns in output)
+- make install / uninstall scripts
 
 ## confocal-image-analysis
 

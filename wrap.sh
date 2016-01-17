@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 
-# TODO: make conversion.ijm create dummy channels and the rest to check if the channel exists before proceeding
-# use: ./wrap.sh /path/to/folder/with/scripts/
-# optionally set ./wrap.sh /path/ --swap-channels
-
 # rename all files so that it makes sense
 function rename_files {
-    if [ -d "raw" ]; then
+    if [ -d "$RAW_DIR" ]; then
         mkdir input
 
-        cd raw
-        rename_files_indir
+        cd $RAW_DIR
+        rename_files_indir $1 #pass the $RAW_DIR/input further
         cd ..
 
         cd input
@@ -33,13 +29,15 @@ function rename_files_indir {
     for i in * ; do
         if [ -d $i ]; then
             cd $i
-
-            rename_files_indir
+            rename_files_indir $1
             cd ..
         else
-            prefix=$(pwd)
+            # prefix=$current_wd split on "raw" [1]; a więc jendak potrzebuję absulute path #TODO
             prefix=${prefix//'/'/_}_
-            mv "$i" "$pthInput$prefix$i"
+            mv "$i" "$1$prefix$i"
+#           prefix=$(pwd)
+#           prefix=${prefix//'/'/_}_
+#           mv "$i" "$pthInput$prefix$i"
         fi
     done
 }
@@ -62,12 +60,12 @@ function measure_lsm {
   done
 }
 
-# macro converts each .lsm file in given directory to three .tif files representing channels and saves them into an output directory
-function conversion {
-    if [ ! -d "convert" ]; then
-        mkdir convert
+# macro splits each .lsm file in given directory to three .tif files representing channels and saves them into an output directory
+function split_channels {
+    if [ ! -d "split" ]; then
+        mkdir split
     fi
-    ./ImageJ -macro convert.ijm $1
+    ./ImageJ -macro split.ijm $1
 }
 
 
@@ -77,7 +75,7 @@ function colocalisation {
         mkdir colocalisation
     fi
 
-    for file in $( ls -d convert/* | grep 'C2-\|C1-' ); do
+    for file in $( ls -d split/* | grep 'C2-\|C1-' ); do
         cp $file colocalisation
     done
 
@@ -93,7 +91,7 @@ function count_nuclei {
         mkdir count
     fi
 
-    for file in $(ls -d convert/* | grep C2-); do #ATT
+    for file in $(ls -d split/* | grep C2-); do #ATT
         cp $file count
     done
      
@@ -112,7 +110,7 @@ function in_nuclei {
         mkdir in_nuclei
     fi
 
-    for file in $( ls -d convert/* | grep 'C2-\|C1-' ); do #ATT (also in make_results.R)
+    for file in $( ls -d split/* | grep 'C2-\|C1-' ); do #ATT (also in make_results.R)
         cp $file in_nuclei
     done
 
@@ -142,37 +140,79 @@ function exploratory {
 
 ###
 
-# suffix to add to folder names
-#pth_return=pwd
+# options: --path to the analysis folder --procedure (incl. swap channels)
+while getopts "hd:p:" OPTION
+do
+    case $OPTION in
+    h)  echo "TODO: Add a usage file."
+        exit 1
+        ;;
+    d)  RAW_DIR=$OPTARG
+        ;;
+    p)  PROCEDURE=$OPTARG
+        ;;
+    ?)  exit
+    esac
+done
 
-pth=$1
-swap_channels=$2
+# echo "Something wrong with the options you did (not?) specify. Check out the help file."
+where_is="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # path to bin
 
-# folders
-pthInput=$pth/input/
-pthConv=$pth/convert/
-pthColoc=$pth/colocalisation/
-pthCount=$pth/count/
-pthIn_nuclei=$pth/in_nuclei/
+# things that are actually done
 
-# arguments for each function
-argsRename=$pth/raw
-argsLsm_tif=$pthInput
-argsConv=$pthInput/__SEPARATOR__/$pthConv
-argsColoc=$pthConv
-argsCount=$pthCount
-argsIn_nuclei=$pthIn_nuclei
+case $PROCEDURE in
+    rename_files)
+        rename_files input/ # dirty; only perform once 
+        echo $RAW_DIR
+        echo "Rename OK"
+        ;;
+    swap_channels)
+        swap_channels input/
+        echo "Swap OK"
+        ;;
+    lsm_to_tiff)
+        lsm_to_tif input/
+        echo "To tiff OK"
+        ;;
+    measure_channels)
+        measure_lsm input/
+        echo "Measure OK"
+        ;;
+    split_channels)
+        split_channels input/__SEPARATOR__/split/
+        echo "Split OK"
+        ;;
+    measure_colocalisation)
+        colocalisation split/
+        echo "Colocalisation OK"
+        ;;
+    count_nuclei)
+        count_nuclei count/ #ATT for some .lsm images there are no 3 channels; point ot which is with nucl
+        echo "Count OK"
+        ;;
+    measure_in_nuclei)
+        in_nuclei in_nuclei/ #ATT same here
+        echo "In nuclei OK"
+        ;;
+    make_results)
+        make_results #TODO ARG # need to change stuff for differnet runs in make_results.R
+        echo "Results OK"
+        ;;
+    *)
+        echo "No valid precedure specified (?)."
+        ;;
 
-#rename_files # dirty; only perform once 
-#if [ -n "$swap_channels" ]; then
-#  swap_channels $pthInput
-#fi
+esac
 
-#lsm_to_tif $pthInput
-#measure_lsm $pthInput
-#conversion $pthInput/__SEPARATOR__/$pthConv
-colocalisation $pthConv
-#count_nuclei $pthCount #ATT for some .lsm images there are no 3 channels; point ot which is with nucl
-#in_nuclei $pthIn_nuclei #ATT same here
-#make_results $pth # need to change stuff for differnet runs in make_results.R
-#clean_up #TODO dont get rid of things, put them in output!
+        #clean_up #TODO dont get rid of things, put them in output!
+
+
+
+
+
+
+
+
+
+
+
