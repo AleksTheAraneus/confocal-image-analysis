@@ -19,9 +19,11 @@ function processFile(args) {
 	selectWindow("Colocalized Pixel Map RGB Image");
 	run("RGB Measure Plus", "red_threshold_min=1 red_threshold_max=255 green_threshold_min=1 green_threshold_max=255 blue_threshold_min=1 blue_threshold_max=255");
 	
-	new_path=replace(file1, "convert", "colocalisation");
+	//new_path=replace(file1, "input", "colocalisation");
+    new_path=file1;
+    print(new_path)
 	run("Save", "save=new_path");
-	saveAs("Results", new_path+"_coloc.tsv");
+	saveAs("Results", replace(new_path, ".tif", "_coloc.tsv"));
 	
 
 }
